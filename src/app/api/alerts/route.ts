@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 export async function GET() {
   try {
@@ -29,9 +37,9 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      await resend.emails.send({
-        from: "HORECA HUB <alerts@resend.dev>",
-        to: "nsganias@uoc.edu",
+      await transporter.sendMail({
+        from: '"HORECA HUB" <nicosaga@gmail.com>',
+        to: "nicosaga@gmail.com",
         subject: `🚨 ALERTA: ${alert.hub.name}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
