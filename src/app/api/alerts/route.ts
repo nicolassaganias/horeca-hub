@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
     });
 
     await resend.emails.send({
-      from: "HORECA HUB <alerts@horeca-hub.vercel.app>",
-      to: "nsganias@uoc.edu",
+      from: "HORECA HUB <onboarding@resend.dev>",
+      to: "nicosaga@gmail.com",
       subject: `🚨 ALERTA: ${alert.hub.name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
