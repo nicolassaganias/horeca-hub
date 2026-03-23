@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 export async function GET() {
   try {
@@ -28,8 +36,8 @@ export async function POST(request: NextRequest) {
       include: { hub: true },
     });
 
-    await resend.emails.send({
-      from: "HORECA HUB <onboarding@resend.dev>",
+    await transporter.sendMail({
+      from: '"HORECA HUB" <nicosaga@gmail.com>',
       to: "nicosaga@gmail.com",
       subject: `🚨 ALERTA: ${alert.hub.name}`,
       html: `
@@ -55,7 +63,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(alert);
   } catch (error) {
     console.error("POST alert error:", error);
-    return NextResponse.json({ error: "Error creating alert" }, { status: 500 });
+    return NextResponse.json({ error: "Error sending alert" }, { status: 500 });
   }
 }
 
