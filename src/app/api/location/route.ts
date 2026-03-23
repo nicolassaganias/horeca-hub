@@ -22,6 +22,20 @@ export async function GET() {
       ORDER BY truck_id, timestamp DESC
     `;
 
+    const hubs = await prisma.hub.findMany({
+      include: {
+        reservations: { where: { status: "active" } },
+        alerts: { where: { resolved: false }, orderBy: { createdAt: "desc" }, take: 1 },
+      },
+    });
+
+    const alerts = await prisma.alert.findMany({
+      where: { resolved: false },
+      include: { hub: true },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
+
     return NextResponse.json({
       logs: logs.map((log: TruckLog) => ({
         id: log.id,
@@ -37,6 +51,8 @@ export async function GET() {
         longitude: pos.longitude,
         timestamp: pos.timestamp.toISOString(),
       })),
+      hubs,
+      alerts,
     });
   } catch (error) {
     console.error("GET Error:", error);
