@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as XLSX from "xlsx";
 
 interface DeliveryNote {
   id: number;
@@ -149,11 +150,70 @@ function NewDeliveryNote({ onBack, onSuccess }: { onBack: () => void; onSuccess:
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const normalizeProductType = (value: string): string => {
+    const v = value.toLowerCase();
+    if (v.includes("congelad")) return "congelado";
+    if (v.includes("refrigerad")) return "refrigerado";
+    if (v.includes("sec")) return "seco";
+    if (v.includes("bebid")) return "bebidas";
+    return "";
+  };
+
+  const normalizeEstablishmentType = (value: string): string => {
+    const v = value.toLowerCase();
+    if (v.includes("restaurant")) return "restaurante";
+    if (v.includes("hotel")) return "hotel";
+    if (v.includes("bar") || v.includes("café") || v.includes("cafeter")) return "bar";
+    if (v.includes("catering")) return "catering";
+    return "";
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, fileName: file.name }));
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as string[][];
+
+        if (jsonData.length < 2) {
+          setErrorMessage("El archivo está vacío o no tiene datos");
+          return;
+        }
+
+        const headers = jsonData[0].map(h => h?.toString().toLowerCase().trim() || "");
+        const row = jsonData[1];
+
+        const getValue = (colName: string): string => {
+          const idx = headers.findIndex(h => h.includes(colName));
+          return idx >= 0 ? (row[idx]?.toString() || "") : "";
+        };
+
+        const dateValue = getValue("fecha");
+        const formattedDate = dateValue ? new Date(dateValue).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+
+        setFormData(prev => ({
+          ...prev,
+          fileName: file.name,
+          number: getValue("número") || getValue("numero") || prev.number,
+          date: formattedDate,
+          supplier: getValue("proveedor") || prev.supplier,
+          weight: getValue("peso") || prev.weight,
+          volume: getValue("volumen") || prev.volume,
+          productType: normalizeProductType(getValue("tipología producto") || getValue("producto")) || prev.productType,
+          establishmentType: normalizeEstablishmentType(getValue("tipología establecimiento") || getValue("establecimiento")) || prev.establishmentType,
+        }));
+      } catch (err) {
+        setErrorMessage("Error al leer el archivo Excel");
+        console.error(err);
+      }
+    };
+    reader.readAsArrayBuffer(file);
   };
 
   const handleReadRFID = async () => {
