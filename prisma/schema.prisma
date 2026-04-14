@@ -58,3 +58,24 @@ model Alert {
 
   @@map("alerts")
 }
+
+model DeliveryNote {
+  id               Int      @id @default(autoincrement())
+  number           String   @unique @map("number")
+  date             DateTime @default(now())
+  supplier         String
+  rfidTag          String?  @map("rfid_tag")
+  type             String   @default("original")
+  correctedNoteId  Int?     @map("corrected_note_id")
+  fileName         String?  @map("file_name")
+  weight           Float?
+  volume           Float?
+  productType      String?  @map("product_type")
+  establishmentType String? @map("establishment_type")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  correctedNote DeliveryNote? @relation("CorrectionRelation", fields: [correctedNoteId], references: [id])
+  corrections   DeliveryNote[] @relation("CorrectionRelation")
+
+  @@map("delivery_notes")
+}
