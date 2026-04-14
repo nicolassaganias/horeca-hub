@@ -325,6 +325,13 @@ export default function AdminDashboard() {
                       </button>
                     </td>
                   </tr>
+                ))}
+                {trucks.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                      No hay camiones activos
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
