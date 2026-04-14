@@ -150,24 +150,6 @@ function NewDeliveryNote({ onBack, onSuccess }: { onBack: () => void; onSuccess:
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const normalizeProductType = (value: string): string => {
-    const v = value.toLowerCase();
-    if (v.includes("congelad")) return "congelado";
-    if (v.includes("refrigerad")) return "refrigerado";
-    if (v.includes("sec")) return "seco";
-    if (v.includes("bebid")) return "bebidas";
-    return "";
-  };
-
-  const normalizeEstablishmentType = (value: string): string => {
-    const v = value.toLowerCase();
-    if (v.includes("restaurant")) return "restaurante";
-    if (v.includes("hotel")) return "hotel";
-    if (v.includes("bar") || v.includes("café") || v.includes("cafeter")) return "bar";
-    if (v.includes("catering")) return "catering";
-    return "";
-  };
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -189,24 +171,30 @@ function NewDeliveryNote({ onBack, onSuccess }: { onBack: () => void; onSuccess:
         const headers = jsonData[0].map(h => h?.toString().toLowerCase().trim() || "");
         const row = jsonData[1];
 
-        const getValue = (colName: string): string => {
+        const getValue = (colName: string): string | number => {
           const idx = headers.findIndex(h => h.includes(colName));
-          return idx >= 0 ? (row[idx]?.toString() || "") : "";
+          return idx >= 0 ? (row[idx] ?? "") : "";
         };
 
-        const dateValue = getValue("fecha");
-        const formattedDate = dateValue ? new Date(dateValue).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+        const parseExcelDate = (value: string | number): string => {
+          if (typeof value === "number" && value > 40000 && value < 60000) {
+            const date = new Date((value - 25569) * 86400 * 1000);
+            return date.toISOString().split("T")[0];
+          }
+          const parsed = new Date(value);
+          return isNaN(parsed.getTime()) ? new Date().toISOString().split("T")[0] : parsed.toISOString().split("T")[0];
+        };
 
         setFormData(prev => ({
           ...prev,
           fileName: file.name,
-          number: getValue("número") || getValue("numero") || prev.number,
-          date: formattedDate,
-          supplier: getValue("proveedor") || prev.supplier,
-          weight: getValue("peso") || prev.weight,
-          volume: getValue("volumen") || prev.volume,
-          productType: normalizeProductType(getValue("tipología producto") || getValue("producto")) || prev.productType,
-          establishmentType: normalizeEstablishmentType(getValue("tipología establecimiento") || getValue("establecimiento")) || prev.establishmentType,
+          number: getValue("número")?.toString() || prev.number,
+          date: parseExcelDate(getValue("fecha")),
+          supplier: getValue("proveedor")?.toString() || prev.supplier,
+          weight: getValue("peso")?.toString() || prev.weight,
+          volume: getValue("volumen")?.toString() || prev.volume,
+          productType: getValue("tipología producto")?.toString() || prev.productType,
+          establishmentType: getValue("tipología establecimiento")?.toString() || prev.establishmentType,
         }));
       } catch (err) {
         setErrorMessage("Error al leer el archivo Excel");
@@ -318,32 +306,24 @@ function NewDeliveryNote({ onBack, onSuccess }: { onBack: () => void; onSuccess:
 
         <div>
           <label className="block text-sm font-medium text-slate-600 mb-1">Tipología Producto</label>
-          <select
+          <input
+            type="text"
             value={formData.productType}
             onChange={(e) => setFormData(prev => ({ ...prev, productType: e.target.value }))}
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-          >
-            <option value="">Seleccionar...</option>
-            <option value="congelado">Congelado</option>
-            <option value="refrigerado">Refrigerado</option>
-            <option value="seco">Seco</option>
-            <option value="bebidas">Bebidas</option>
-          </select>
+            placeholder="Ej: Electrónica, Perecederos..."
+          />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-600 mb-1">Tipología Establecimiento</label>
-          <select
+          <input
+            type="text"
             value={formData.establishmentType}
             onChange={(e) => setFormData(prev => ({ ...prev, establishmentType: e.target.value }))}
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-          >
-            <option value="">Seleccionar...</option>
-            <option value="restaurante">Restaurante</option>
-            <option value="hotel">Hotel</option>
-            <option value="bar">Bar/Cafetería</option>
-            <option value="catering">Catering</option>
-          </select>
+            placeholder="Ej: Restaurante, Hotel, Supermercado..."
+          />
         </div>
       </div>
 
@@ -583,32 +563,24 @@ function RectifyDeliveryNote({ onBack, onSuccess }: { onBack: () => void; onSucc
 
             <div>
               <label className="block text-sm font-medium text-slate-600 mb-1">Tipología Producto</label>
-              <select
+              <input
+                type="text"
                 value={formData.productType}
                 onChange={(e) => setFormData(prev => ({ ...prev, productType: e.target.value }))}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Mantener: {originalNote.productType || "No definido"}</option>
-                <option value="congelado">Congelado</option>
-                <option value="refrigerado">Refrigerado</option>
-                <option value="seco">Seco</option>
-                <option value="bebidas">Bebidas</option>
-              </select>
+                placeholder={`Actual: ${originalNote.productType || "No definido"}`}
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-600 mb-1">Tipología Establecimiento</label>
-              <select
+              <input
+                type="text"
                 value={formData.establishmentType}
                 onChange={(e) => setFormData(prev => ({ ...prev, establishmentType: e.target.value }))}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Mantener: {originalNote.establishmentType || "No definido"}</option>
-                <option value="restaurante">Restaurante</option>
-                <option value="hotel">Hotel</option>
-                <option value="bar">Bar/Cafetería</option>
-                <option value="catering">Catering</option>
-              </select>
+                placeholder={`Actual: ${originalNote.establishmentType || "No definido"}`}
+              />
             </div>
           </div>
 
