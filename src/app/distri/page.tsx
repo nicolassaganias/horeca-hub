@@ -136,6 +136,11 @@ function MainMenu({ onSelect, notes }: { onSelect: (v: View) => void; notes: Del
 }
 
 function NewDeliveryNote({ onBack, onSuccess }: { onBack: () => void; onSuccess: () => void }) {
+  const [rfidStep, setRfidStep] = useState<"scan" | "form">("scan");
+  const [scanning, setScanning] = useState(false);
+  const [scanned, setScanned] = useState(false);
+  const [rfidTag, setRfidTag] = useState("");
+
   const [formData, setFormData] = useState({
     number: "",
     date: new Date().toISOString().split("T")[0],
@@ -149,6 +154,25 @@ function NewDeliveryNote({ onBack, onSuccess }: { onBack: () => void; onSuccess:
   });
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const startScan = () => {
+    setScanning(true);
+    setTimeout(async () => {
+      try {
+        const res = await fetch("/api/rfid");
+        const data = await res.json();
+        setRfidTag(data.rfidTag);
+        setFormData(prev => ({ ...prev, rfidTag: data.rfidTag }));
+        setScanned(true);
+        setTimeout(() => {
+          setRfidStep("form");
+        }, 1500);
+      } catch {
+        setErrorMessage("Error al leer RFID");
+        setScanning(false);
+      }
+    }, 2000);
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -204,16 +228,6 @@ function NewDeliveryNote({ onBack, onSuccess }: { onBack: () => void; onSuccess:
     reader.readAsArrayBuffer(file);
   };
 
-  const handleReadRFID = async () => {
-    try {
-      const res = await fetch("/api/rfid");
-      const data = await res.json();
-      setFormData(prev => ({ ...prev, rfidTag: data.rfidTag }));
-    } catch {
-      setErrorMessage("Error al leer RFID");
-    }
-  };
-
   const handleSubmit = async () => {
     if (!formData.number || !formData.supplier) {
       setErrorMessage("Número y proveedor son requeridos");
@@ -243,9 +257,72 @@ function NewDeliveryNote({ onBack, onSuccess }: { onBack: () => void; onSuccess:
     }
   };
 
+  if (rfidStep === "scan") {
+    return (
+      <div className="bg-white rounded-xl shadow-md p-8">
+        <h2 className="text-xl font-semibold text-slate-700 mb-8 text-center">Cargar Nuevo Albarán</h2>
+        
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className={`relative w-32 h-32 mb-8 ${scanning ? "animate-pulse" : ""}`}>
+            <div className="absolute inset-0 bg-orange-100 rounded-full flex items-center justify-center">
+              <div className={`w-20 h-20 bg-orange-200 rounded-full flex items-center justify-center ${scanning ? "animate-bounce" : ""}`}>
+                <span className="text-4xl">📡</span>
+              </div>
+            </div>
+            {scanning && (
+              <>
+                <div className="absolute inset-0 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                <div className="absolute -inset-2 border-4 border-orange-300 border-b-transparent rounded-full animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
+              </>
+            )}
+          </div>
+
+          {scanning && !scanned && (
+            <div className="text-center">
+              <p className="text-lg font-medium text-orange-600 mb-2">Escaneando etiqueta RFID...</p>
+              <p className="text-sm text-slate-500">Acerque la etiqueta al lector</p>
+            </div>
+          )}
+
+          {scanned && (
+            <div className="text-center">
+              <p className="text-lg font-medium text-green-600 mb-2">¡Etiqueta leída!</p>
+              <p className="font-mono text-sm bg-slate-100 px-4 py-2 rounded-lg">{rfidTag}</p>
+            </div>
+          )}
+
+          {!scanning && !scanned && (
+            <div className="text-center">
+              <p className="text-lg font-medium text-slate-600 mb-2">Escanear Etiqueta RFID</p>
+              <p className="text-sm text-slate-500 mb-6">Presione el botón para iniciar el escaneo</p>
+              <button
+                onClick={startScan}
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-medium transition"
+              >
+                Iniciar Escaneo
+              </button>
+            </div>
+          )}
+
+          {errorMessage && (
+            <p className="mt-4 text-red-600 text-sm">{errorMessage}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-md p-6">
       <h2 className="text-xl font-semibold text-slate-700 mb-6">Cargar Nuevo Albarán</h2>
+
+      <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-6 flex items-center gap-3">
+        <span className="text-lg">📡</span>
+        <div>
+          <p className="text-sm font-medium text-orange-800">RFID Vinculado</p>
+          <p className="text-xs font-mono text-orange-600">{rfidTag}</p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
@@ -342,18 +419,6 @@ function NewDeliveryNote({ onBack, onSuccess }: { onBack: () => void; onSuccess:
               {formData.fileName || "Subir PDF o Excel"}
             </p>
           </label>
-        </div>
-
-        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
-          <button
-            onClick={handleReadRFID}
-            className="w-full"
-          >
-            <div className="text-3xl mb-2">📡</div>
-            <p className="text-sm text-slate-600">
-              {formData.rfidTag || "Tocar lector RFID"}
-            </p>
-          </button>
         </div>
       </div>
 
