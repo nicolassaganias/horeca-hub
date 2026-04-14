@@ -106,6 +106,14 @@ export default function AdminDashboard() {
     fetchData();
   };
 
+  const terminateTruck = async (truckId: string) => {
+    if (!confirm(`¿Terminar actividad del camión "${truckId}"?`)) return;
+    await fetch(`/api/trucks?truckId=${encodeURIComponent(truckId)}`, {
+      method: "DELETE",
+    });
+    fetchData();
+  };
+
   const formatTime = (ts: string) => {
     return new Date(ts).toLocaleString("es-ES", {
       day: "2-digit",
@@ -284,6 +292,9 @@ export default function AdminDashboard() {
                   <th className="px-4 py-3 text-left font-medium text-slate-600">
                     Última actualización
                   </th>
+                  <th className="px-4 py-3 text-left font-medium text-slate-600">
+                    Acción
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -305,12 +316,13 @@ export default function AdminDashboard() {
                     <td className="px-4 py-3 text-slate-500">
                       {formatTime(truck.timestamp)}
                     </td>
-                  </tr>
-                ))}
-                {trucks.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
-                      No hay camiones activos
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => terminateTruck(truck.truckId)}
+                        className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded font-medium"
+                      >
+                        Terminar
+                      </button>
                     </td>
                   </tr>
                 )}
