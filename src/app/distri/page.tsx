@@ -105,7 +105,6 @@ function MainMenu({ onSelect, notes }: { onSelect: (v: View) => void; notes: Del
                 <tr>
                   <th className="px-4 py-3 text-left">N° Albarán</th>
                   <th className="px-4 py-3 text-left">Fecha</th>
-                  <th className="px-4 py-3 text-left">Proveedor</th>
                   <th className="px-4 py-3 text-left">Tipo</th>
                   <th className="px-4 py-3 text-left">RFID</th>
                 </tr>
@@ -115,7 +114,6 @@ function MainMenu({ onSelect, notes }: { onSelect: (v: View) => void; notes: Del
                   <tr key={note.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3 font-medium">{note.number}</td>
                     <td className="px-4 py-3">{new Date(note.date).toLocaleDateString("es-ES")}</td>
-                    <td className="px-4 py-3">{note.supplier}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${
                         note.type === "original" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"

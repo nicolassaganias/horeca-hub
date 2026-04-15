@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export async function GET() {
+  try {
+    const logs = await prisma.truckLog.findMany({
+      orderBy: { timestamp: "desc" },
+    });
+
+    return NextResponse.json(logs);
+  } catch (error) {
+    console.error("GET Error:", error);
+    return NextResponse.json({ error: "Error fetching logs" }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,15 +26,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await prisma.truckLog.deleteMany({
-      where: { truckId },
-    });
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, message: "Logs preserved for historical records" });
   } catch (error) {
     console.error("DELETE Error:", error);
     return NextResponse.json(
-      { error: "Error deleting truck" },
+      { error: "Error terminating truck" },
       { status: 500 }
     );
   }
