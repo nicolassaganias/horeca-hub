@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-const INITIAL_HUBS = [
+const INITIAL_DUMHS = [
   {
-    name: "Hub Plaça Reial",
-    address: "Plaça Reial, Barcelona",
-    latitude: 41.3797,
-    longitude: 2.1748,
+    name: "DUMH Rambla del Raval",
+    address: "Rambla del Raval, Barcelona",
+    latitude: 41.3828,
+    longitude: 2.1688,
     spots: 3,
   },
   {
-    name: "Hub Plaça Catalunya",
-    address: "Plaça de Catalunya, Barcelona",
-    latitude: 41.387,
-    longitude: 2.1701,
+    name: "DUMH Carrer de Pau Claris",
+    address: "Carrer de Pau Claris & Carrer de Casp, Barcelona",
+    latitude: 41.3897,
+    longitude: 2.1766,
     spots: 4,
   },
 ];
@@ -71,14 +71,14 @@ const INITIAL_DELIVERY_NOTES = [
 
 export async function POST() {
   try {
-    const existingHubs = await prisma.hub.count();
-    let hubsCount = 0;
+    const existingDUMHs = await prisma.dUMH.count();
+    let dumhsCount = 0;
 
-    if (existingHubs === 0) {
-      const hubs = await prisma.hub.createMany({
-        data: INITIAL_HUBS,
+    if (existingDUMHs === 0) {
+      const dumhs = await prisma.dUMH.createMany({
+        data: INITIAL_DUMHS,
       });
-      hubsCount = hubs.count;
+      dumhsCount = dumhs.count;
     }
 
     const existingNotes = await prisma.deliveryNote.count();
@@ -93,7 +93,7 @@ export async function POST() {
 
     return NextResponse.json({
       message: "Seed completed",
-      hubs: hubsCount,
+      dumhs: dumhsCount,
       notes: notesCount,
     });
   } catch (error) {
@@ -104,9 +104,9 @@ export async function POST() {
 
 export async function GET() {
   try {
-    const hubs = await prisma.hub.count();
+    const dumhs = await prisma.dUMH.count();
     const notes = await prisma.deliveryNote.count();
-    return NextResponse.json({ hubs, notes });
+    return NextResponse.json({ dumhs, notes });
   } catch (error) {
     return NextResponse.json({ error: "Error" }, { status: 500 });
   }

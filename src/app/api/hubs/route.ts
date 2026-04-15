@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const hubs = await prisma.hub.findMany({
+    const dumhs = await prisma.dUMH.findMany({
       include: {
         reservations: {
           where: { status: "active" },
@@ -16,10 +16,10 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(hubs);
+    return NextResponse.json(dumhs);
   } catch (error) {
-    console.error("GET hubs error:", error);
-    return NextResponse.json({ error: "Error fetching hubs" }, { status: 500 });
+    console.error("GET dumhs error:", error);
+    return NextResponse.json({ error: "Error fetching dumhs" }, { status: 500 });
   }
 }
 
@@ -28,11 +28,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, address, latitude, longitude, spots = 1 } = body;
 
-    const hub = await prisma.hub.create({
+    const dumh = await prisma.dUMH.create({
       data: { name, address, latitude, longitude, spots },
     });
 
-    return NextResponse.json(hub);
+    return NextResponse.json(dumh);
   } catch (error) {
     console.error("POST hub error:", error);
     return NextResponse.json({ error: "Error creating hub" }, { status: 500 });

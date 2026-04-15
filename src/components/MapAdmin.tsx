@@ -2,8 +2,8 @@
 
 import dynamic from "next/dynamic";
 
-const MapWithHubs = dynamic(
-  () => import("@/components/MapWithHubsInner"),
+const MapWithDUMHs = dynamic(
+  () => import("@/components/MapWithDUMHsInner"),
   { ssr: false }
 );
 
@@ -14,7 +14,7 @@ interface TruckPosition {
   timestamp: string;
 }
 
-interface Hub {
+interface DUMH {
   id: number;
   name: string;
   address: string;
@@ -27,9 +27,9 @@ interface Hub {
 
 interface MapAdminProps {
   trucks: TruckPosition[];
-  hubs: Hub[];
+  dumhs: DUMH[];
 }
 
 export default function MapAdmin(props: MapAdminProps) {
-  return <MapWithHubs {...props} />;
+  return <MapWithDUMHs {...props} />;
 }

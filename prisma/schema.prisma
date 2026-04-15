@@ -17,7 +17,7 @@ model TruckLog {
   @@map("truck_logs")
 }
 
-model Hub {
+model DUMH {
   id        Int      @id @default(autoincrement())
   name      String
   address   String
@@ -29,7 +29,7 @@ model Hub {
   reservations Reservation[]
   alerts       Alert[]
 
-  @@map("hubs")
+  @@map("dumhs")
 }
 
 model Reservation {
@@ -41,7 +41,7 @@ model Reservation {
   status    String   @default("active")
   createdAt DateTime @default(now()) @map("created_at")
 
-  hub Hub @relation(fields: [hubId], references: [id])
+  dumh DUMH @relation(fields: [hubId], references: [id])
 
   @@map("reservations")
 }
@@ -54,7 +54,7 @@ model Alert {
   resolved  Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
 
-  hub Hub @relation(fields: [hubId], references: [id])
+  dumh DUMH @relation(fields: [hubId], references: [id])
 
   @@map("alerts")
 }

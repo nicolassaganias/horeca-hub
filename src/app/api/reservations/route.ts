@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     const reservations = await prisma.reservation.findMany({
-      include: { hub: true },
+      include: { dumh: true },
       orderBy: { startTime: "desc" },
     });
     return NextResponse.json(reservations);
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
-      return NextResponse.json({ error: "Hub already reserved for this time" }, { status: 409 });
+      return NextResponse.json({ error: "DUMH already reserved for this time" }, { status: 409 });
     }
 
     const reservation = await prisma.reservation.create({
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
         startTime: new Date(startTime),
         endTime: new Date(endTime),
       },
-      include: { hub: true },
+      include: { dumh: true },
     });
 
     return NextResponse.json(reservation);

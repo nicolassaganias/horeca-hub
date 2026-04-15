@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
 export async function GET() {
   try {
     const alerts = await prisma.alert.findMany({
-      include: { hub: true },
+      include: { dumh: true },
       orderBy: { createdAt: "desc" },
       take: 50,
     });
@@ -33,21 +33,21 @@ export async function POST(request: NextRequest) {
 
     const alert = await prisma.alert.create({
       data: { hubId, type, message },
-      include: { hub: true },
+      include: { dumh: true },
     });
 
     try {
       await transporter.sendMail({
         from: '"HORECA HUB" <nicosaga@gmail.com>',
         to: "nicosaga@gmail.com",
-        subject: `🚨 ALERTA: ${alert.hub.name}`,
+        subject: `🚨 ALERTA: ${alert.dumh.name}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #dc2626; color: white; padding: 20px; text-align: center;">
               <h1 style="margin: 0;">🚨 ALERTA HORECA HUB</h1>
             </div>
             <div style="padding: 20px; background: #f9fafb;">
-              <h2 style="color: #dc2626;">${alert.hub.name}</h2>
+              <h2 style="color: #dc2626;">${alert.dumh.name}</h2>
               <p style="font-size: 18px; color: #374151;">${message}</p>
               <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
               <p style="color: #6b7280; font-size: 14px;">

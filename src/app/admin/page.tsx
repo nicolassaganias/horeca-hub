@@ -19,7 +19,7 @@ interface TruckPosition {
   timestamp: string;
 }
 
-interface Hub {
+interface DUMH {
   id: number;
   name: string;
   address: string;
@@ -37,7 +37,7 @@ interface Alert {
   message: string;
   createdAt: string;
   resolved: boolean;
-  hub: { name: string };
+  dumh: { name: string };
 }
 
 interface LogEntry {
@@ -50,7 +50,7 @@ interface LogEntry {
 
 export default function AdminDashboard() {
   const [trucks, setTrucks] = useState<TruckPosition[]>([]);
-  const [hubs, setHubs] = useState<Hub[]>([]);
+  const [dumhs, setDUMHs] = useState<DUMH[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [lastUpdate, setLastUpdate] = useState<string>("");
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
       setTrucks(data.lastPositions || []);
-      setHubs(data.hubs || []);
+      setDUMHs(data.dumhs || []);
       setAlerts(data.alerts || []);
       setLogs(data.logs || []);
       setLastUpdate(new Date().toLocaleTimeString("es-ES"));
@@ -167,8 +167,8 @@ export default function AdminDashboard() {
           </div>
 
           <div className="bg-white rounded-xl shadow-md p-4">
-            <h2 className="text-lg font-semibold text-slate-700 mb-3">Hubs</h2>
-            <div className="text-4xl font-bold text-green-600">{hubs.length}</div>
+            <h2 className="text-lg font-semibold text-slate-700 mb-3">DUMHs</h2>
+            <div className="text-4xl font-bold text-green-600">{dumhs.length}</div>
             <p className="text-slate-500 text-sm">puntos de estacionamiento</p>
           </div>
 
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
               </span>
             </div>
             <div className="h-[450px]">
-              <MapComponent trucks={trucks} hubs={hubs} />
+              <MapComponent trucks={trucks} dumhs={dumhs} />
             </div>
           </div>
 
@@ -216,11 +216,10 @@ export default function AdminDashboard() {
                 ) : (
                   alerts.map((alert) => (
                     <div
-                      key={alert.id}
                       className="p-3 border-b border-slate-100 bg-red-50"
                     >
                       <p className="text-sm font-medium text-red-800">
-                        {alert.hub.name}
+                        {alert.dumh.name}
                       </p>
                       <p className="text-xs text-red-600">{alert.message}</p>
                       <p className="text-xs text-slate-500 mt-1">
@@ -245,14 +244,14 @@ export default function AdminDashboard() {
                 </h2>
               </div>
               <div className="p-4 space-y-3">
-                {hubs.map((hub) => (
+                {dumhs.map((dumh) => (
                   <button
-                    key={hub.id}
-                    onClick={() => simulateIntruder(hub.id, hub.name)}
+                    key={dumh.id}
+                    onClick={() => simulateIntruder(dumh.id, dumh.name)}
                     disabled={simulating}
                     className="w-full bg-red-100 hover:bg-red-200 text-red-700 font-medium py-2 px-4 rounded-lg text-sm transition disabled:opacity-50"
                   >
-                    🚨 Intruso en {hub.name}
+                    🚨 Intruso en {dumh.name}
                   </button>
                 ))}
               </div>

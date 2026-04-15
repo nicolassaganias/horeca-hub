@@ -22,7 +22,7 @@ export async function GET() {
       ORDER BY truck_id, timestamp DESC
     `;
 
-    const hubs = await prisma.hub.findMany({
+    const dumhs = await prisma.dUMH.findMany({
       include: {
         reservations: { where: { status: "active" } },
         alerts: { where: { resolved: false }, orderBy: { createdAt: "desc" }, take: 1 },
@@ -31,7 +31,7 @@ export async function GET() {
 
     const alerts = await prisma.alert.findMany({
       where: { resolved: false },
-      include: { hub: true },
+      include: { dumh: true },
       orderBy: { createdAt: "desc" },
       take: 10,
     });
@@ -51,7 +51,7 @@ export async function GET() {
         longitude: pos.longitude,
         timestamp: pos.timestamp.toISOString(),
       })),
-      hubs,
+      dumhs,
       alerts,
     });
   } catch (error) {
