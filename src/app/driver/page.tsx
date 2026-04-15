@@ -129,7 +129,6 @@ export default function DriverPage() {
         
         const now = Date.now();
         const shouldSend = !lastSentRef.current ||
-          calculateDistance(lastSentRef.current.lat, lastSentRef.current.lng, lat, lng) >= 50 ||
           (now - lastSentRef.current.time) >= 30000;
         
         if (shouldSend) {
