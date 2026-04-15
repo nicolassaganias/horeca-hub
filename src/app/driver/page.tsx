@@ -77,9 +77,14 @@ export default function DriverPage() {
 
   const sendLocation = async (lat: number, lng: number) => {
     const id = truckIdRef.current.trim();
-    if (!id) return;
+    console.log("sendLocation called, id:", id);
+    if (!id) {
+      console.log("No truckId, skipping");
+      return;
+    }
     
     try {
+      console.log("Sending to API...");
       const res = await fetch("/api/location", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -91,10 +96,14 @@ export default function DriverPage() {
         })
       });
       
+      console.log("API response status:", res.status);
       if (res.ok) {
         const data = await res.json();
+        console.log("API response data:", data);
         setSentCount(c => c + 1);
         setStatus(`✓ Enviado #${data.id}`);
+      } else {
+        console.log("API error:", await res.text());
       }
     } catch (e) {
       console.error("Error sending:", e);
