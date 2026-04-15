@@ -102,21 +102,27 @@ export default function DriverPage() {
   };
 
   const startTracking = () => {
+    console.log("startTracking called, truckId:", truckId);
     const id = truckId.trim();
+    console.log("id after trim:", id);
     if (!id) {
       setStatus("Ingresa ID de camión");
       return;
     }
 
     setStatus("Activando GPS...");
+    console.log("GPS activating...");
 
     if (!navigator.geolocation) {
       setStatus("GPS no disponible");
+      console.log("Geolocation not available");
       return;
     }
 
+    console.log("Setting up watchPosition...");
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
+        console.log("GPS callback fired, position:", pos.coords);
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         setLocation({lat, lng});
@@ -127,6 +133,7 @@ export default function DriverPage() {
           (now - lastSentRef.current.time) >= 30000;
         
         if (shouldSend) {
+          console.log("Sending location:", lat, lng);
           lastSentRef.current = {lat, lng, time: now};
           sendLocation(lat, lng);
         }
@@ -145,6 +152,7 @@ export default function DriverPage() {
       }
     );
 
+    console.log("watchPosition setup complete, watchId:", watchIdRef.current);
     setIsTracking(true);
     setStatus("Ruta iniciada");
   };
