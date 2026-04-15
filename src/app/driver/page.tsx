@@ -75,10 +75,9 @@ export default function DriverPage() {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   };
 
-  const sendLocation = async (lat: number, lng: number) => {
-    const id = truckIdRef.current.trim();
-    console.log("sendLocation called, id:", id);
-    if (!id) {
+  const sendLocation = async (lat: number, lng: number, truckId: string) => {
+    console.log("sendLocation called, id:", truckId);
+    if (!truckId) {
       console.log("No truckId, skipping");
       return;
     }
@@ -89,7 +88,7 @@ export default function DriverPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          truckId: id,
+          truckId: truckId,
           latitude: lat,
           longitude: lng,
           rfidTags: "[]"
@@ -143,7 +142,7 @@ export default function DriverPage() {
         if (shouldSend) {
           console.log("Sending location:", lat, lng);
           lastSentRef.current = {lat, lng, time: now};
-          sendLocation(lat, lng);
+          sendLocation(lat, lng, id);
         }
         
         setIsTracking(true);
