@@ -23,7 +23,7 @@ interface Reservation {
 
 type View = "main" | "tracking" | "reservations";
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 
 export default function DriverPage() {
   const [view, setView] = useState<View>("main");
@@ -241,6 +241,7 @@ export default function DriverPage() {
             dumhs={dumhs}
             reservations={reservations}
             truckId={truckId}
+            setTruckId={setTruckId}
             isSlotReserved={isSlotReserved}
             onReserve={() => { fetchReservations(); }}
           />
@@ -345,37 +346,33 @@ function TrackingView({
 }
 
 function ReservationsView({
-  dumhs, reservations, truckId, isSlotReserved, onReserve
+  dumhs, reservations, truckId, setTruckId, isSlotReserved, onReserve
 }: {
   dumhs: DUMH[];
   reservations: Reservation[];
   truckId: string;
+  setTruckId: (v: string) => void;
   isSlotReserved: (dumhId: number, date: Date, hour: number) => boolean;
   onReserve: () => void;
 }) {
   const today = new Date();
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    return date;
-  });
+  today.setHours(0, 0, 0, 0);
 
   const [selectedDUMH, setSelectedDUMH] = useState<number | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [duration, setDuration] = useState<number>(1);
   const [reserving, setReserving] = useState(false);
 
   const handleReserve = async () => {
     if (!selectedDUMH || !selectedHour || !truckId.trim()) {
-      alert("Selecciona DUMH, hora y escribe tu ID de camión");
+      alert("Selecciona DUMH, hora e ingresa tu ID de camión");
       return;
     }
 
     setReserving(true);
     try {
-      const startTime = new Date(selectedDate);
-      startTime.setHours(selectedHour, 0, 0, 0);
+      const startTime = new Date(today);
+      startTime.setHours(selectedHour!, 0, 0, 0);
       const endTime = new Date(startTime);
       endTime.setMinutes(endTime.getMinutes() + duration * 30);
 
@@ -410,36 +407,16 @@ function ReservationsView({
       <div className="bg-white rounded-xl shadow-md p-6">
         <h2 className="text-xl font-semibold text-slate-700 mb-4">Reservar Plaza en DUMH</h2>
         
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">ID de Camión</label>
-          <input
-            type="text"
-            value={truckId}
-            onChange={(e) => truckId}
-            placeholder="Ej: CAMION-001"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-          />
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Seleccionar DUMH</label>
-            <div className="space-y-2">
-              {dumhs.map((dumh) => (
-                <button
-                  key={dumh.id}
-                  onClick={() => setSelectedDUMH(dumh.id)}
-                  className={`w-full text-left p-3 rounded-lg border-2 transition ${
-                    selectedDUMH === dumh.id
-                      ? "border-green-500 bg-green-50"
-                      : "border-gray-200 hover:border-green-300"
-                  }`}
-                >
-                  <p className="font-medium">{dumh.name}</p>
-                  <p className="text-sm text-gray-500">{dumh.spots} plazas</p>
-                </button>
-              ))}
-            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">ID de Camión</label>
+            <input
+              type="text"
+              value={truckId}
+              onChange={(e) => setTruckId(e.target.value)}
+              placeholder="Ej: CAMION-001"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+            />
           </div>
 
           <div>
@@ -460,77 +437,64 @@ function ReservationsView({
           </div>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tu ID de Camión (para reservar)</label>
-          <input
-            type="text"
-            value={truckId}
-            onChange={(e) => truckId}
-            placeholder="Escribe tu ID de camión"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-          />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Seleccionar DUMH</label>
+          <div className="grid grid-cols-1 gap-2">
+            {dumhs.map((dumh) => (
+              <button
+                key={dumh.id}
+                onClick={() => setSelectedDUMH(dumh.id)}
+                className={`w-full text-left p-3 rounded-lg border-2 transition ${
+                  selectedDUMH === dumh.id
+                    ? "border-green-500 bg-green-50"
+                    : "border-gray-200 hover:border-green-300"
+                }`}
+              >
+                <p className="font-medium">{dumh.name}</p>
+                <p className="text-sm text-gray-500">{dumh.address}</p>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         <div className="p-4 border-b bg-green-50">
-          <h3 className="font-semibold text-green-800">Grilla Semanal</h3>
-          <p className="text-sm text-green-600">Selecciona fecha y hora para reservar</p>
+          <h3 className="font-semibold text-green-800">Horario - {today.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}</h3>
+          <p className="text-sm text-green-600">Selecciona una hora para reservar</p>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-slate-50">
-                <th className="px-2 py-3 text-left font-medium text-slate-600 sticky left-0 bg-slate-50">Hora</th>
-                {weekDays.map((date, i) => (
-                  <th key={i} className="px-2 py-3 text-center font-medium text-slate-600 min-w-[80px]">
-                    <div>{date.toLocaleDateString("es-ES", { weekday: "short" })}</div>
-                    <div className="text-xs">{date.toLocaleDateString("es-ES", { day: "numeric", month: "short" })}</div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {HOURS.map((hour) => (
-                <tr key={hour}>
-                  <td className="px-2 py-2 font-medium text-slate-600 sticky left-0 bg-white">
-                    {hour.toString().padStart(2, "0")}:00
-                  </td>
-                  {weekDays.map((date, i) => {
-                    const isReserved = selectedDUMH ? isSlotReserved(selectedDUMH, date, hour) : false;
-                    const isSelected = selectedDate.toDateString() === date.toDateString() && selectedHour === hour;
-                    const isPast = date.toDateString() === today.toDateString() && hour < today.getHours();
+        <div className="p-4">
+          <div className="flex flex-wrap gap-2">
+            {HOURS.map((hour) => {
+              const isReserved = selectedDUMH ? isSlotReserved(selectedDUMH, today, hour) : false;
+              const isSelected = selectedHour === hour;
+              const isPast = hour < new Date().getHours();
 
-                    return (
-                      <td key={i} className="px-1 py-1">
-                        <button
-                          onClick={() => {
-                            if (!isReserved && !isPast) {
-                              setSelectedDate(date);
-                              setSelectedHour(hour);
-                            }
-                          }}
-                          disabled={isReserved || isPast}
-                          className={`w-full h-10 rounded text-xs font-medium transition ${
-                            isSelected
-                              ? "bg-green-600 text-white"
-                              : isReserved
-                              ? "bg-red-100 text-red-600 cursor-not-allowed"
-                              : isPast
-                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                              : "bg-green-50 text-green-700 hover:bg-green-100"
-                          }`}
-                        >
-                          {isReserved ? "Ocupado" : isPast ? "-" : `${hour}:00`}
-                        </button>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              return (
+                <button
+                  key={hour}
+                  onClick={() => {
+                    if (!isReserved && !isPast) {
+                      setSelectedHour(hour);
+                    }
+                  }}
+                  disabled={isReserved || isPast}
+                  className={`px-4 py-3 rounded-lg text-sm font-medium transition min-w-[70px] ${
+                    isSelected
+                      ? "bg-green-600 text-white"
+                      : isReserved
+                      ? "bg-red-100 text-red-600 cursor-not-allowed"
+                      : isPast
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                  }`}
+                >
+                  {isReserved ? "Ocupado" : isPast ? "-" : `${hour}:00`}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -539,7 +503,7 @@ function ReservationsView({
           <h3 className="font-semibold text-slate-700 mb-3">Confirmar Reserva</h3>
           <div className="bg-green-50 rounded-lg p-4 mb-4">
             <p><strong>DUMH:</strong> {dumhs.find(d => d.id === selectedDUMH)?.name}</p>
-            <p><strong>Fecha:</strong> {selectedDate.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}</p>
+            <p><strong>Fecha:</strong> {today.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}</p>
             <p><strong>Hora:</strong> {selectedHour.toString().padStart(2, "0")}:00 - {(selectedHour + (duration * 30 / 60)).toString().padStart(2, "0")}:{(duration * 30) % 60}</p>
             <p><strong>Duración:</strong> {duration * 30} minutos</p>
           </div>
